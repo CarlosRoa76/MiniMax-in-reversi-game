@@ -5,12 +5,10 @@ from copy import deepcopy
 
 class Board(ABC):
     _state = None
-    depth = 0
-    cost = 0
+    _depth = 0
     def __init__(self, state, depth=0, utility=0):
         self._state = state
-        self.depth = depth
-        self.utility = utility
+        self._depth = depth
     
     @abstractmethod
     def childrens(self):
@@ -23,7 +21,8 @@ class ReversiBoard(Board):
     
     def __init__(self, state=None, depth=0, utility=0):
         super().__init__(state, depth, utility)
-        self.create_board()
+        if not state:
+            self.create_board()
         
     def create_board(self):
         self._state = [[None for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
@@ -57,14 +56,29 @@ class ReversiBoard(Board):
             return True
         return False
     
-    def childrens(self):
-        pass
-    
+    def childrens(self, player_color):
+        
+        options_available = self.posible_movements(player_color)
+        children = []
+        
+        for x, y in options_available:
+            new_state = deepcopy(self._state)
+            child = ReversiBoard(new_state, self.depth + 1)
+            child.insert_play(x, y, Token(player_color))
+            children.append(child)
+            # print(child)
+            
+        return children
     def evaluate(self):
         pass
     
+    @property
     def state(self):
         return self._state
+    
+    @property
+    def depth(self):
+        return self._depth
     
     def posible_movements(self, color):
         movements = []
@@ -135,7 +149,7 @@ class ReversiBoard(Board):
         return board_str
     
     def __repr__(self):
-        return f"ReversiBoard(state={self._state if any(x!=None for y in self._state for x in y) else None}, depth={self.depth}, utility={self.utility})"
+        return f"ReversiBoard(state={self._state}, depth={self.depth})"
     
     
     

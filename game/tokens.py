@@ -14,7 +14,7 @@ class Token:
         return self.color
 
     def __repr__(self):
-        self.__str__()
+        return self.__str__()
 
 
 
@@ -39,7 +39,7 @@ class StackToken:
         return f"Color: {self.color}, Tokens: {len(self.tokens)}"
     
     def __repr__(self):
-        return f"StackToken(color={self.colors})"
+        return f"StackToken(color={self.color}, size={len(self.tokens)})"
     
       
 if __name__ == "__main__":
