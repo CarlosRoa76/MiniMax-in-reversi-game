@@ -32,6 +32,21 @@ class ReversiBoard(Board):
         self._state[4][3] = Token('W')
         self._state[4][4] = Token('B')
     
+    def points(self):
+        black_points = 0
+        white_points = 0
+        for row in self._state:
+            for token in row:
+                if token is None:
+                    continue
+                
+                if token.color == 'B':
+                    black_points += 1
+                elif token.color == 'W':
+                    white_points += 1
+                    
+        return {'B': black_points, 'W': white_points}
+        
     def is_terminal(self):
         # The game ends when neither player can make a valid move
         if not self.posible_movements('B') and not self.posible_movements('W'):

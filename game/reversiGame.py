@@ -1,5 +1,6 @@
 from game.reversiBoard import ReversiBoard
 from players import humanPlayer, randomPlayer
+import time
 
 class ReversiGame:
     
@@ -30,7 +31,17 @@ class ReversiGame:
         
         while not self.board.is_terminal():
             print(f"Turno de {self.current_turn.name} ({self.current_turn.token_color}) Profoundidad: {self.board.depth}")
+            print("Puntajes:\n", "Blancas:", self.board.points()['W'], "- Negras:", self.board.points()['B'])
             print(self.board)
+            
+            if self.current_turn.tokens.is_empty():
+                print(f"{self.current_turn.name} no tiene fichas para jugar.")
+                self.swap_turn()
+                continue
+            
+            if not isinstance(self.current_turn, humanPlayer.HumanPlayer):
+                time.sleep(1)
+                
             x, y = self.current_turn.play(self.board)
             self.board.insert_play(x, y, self.current_turn.tokens.pop())
             print(f"\n{self.current_turn.name} juega en ({x}, {y})")

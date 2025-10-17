@@ -12,12 +12,22 @@ class HumanPlayer(Player):
         
         print("Movimientos posibles:", board.posible_movements(self.tokens.color))
         print("Que movimiento desea hacer?")
-        position = int(input("Ingrese la coordenada (x,y): "))
-        x, y = divmod(position, 10)
+        position = input("Ingrese la coordenada (x,y): ")
+        
+        if re.match(r'^\d{2}$', str(position)):
+            x, y = divmod(int(position), 10)
+        else:
+            x, y = -1, -1
+            
         while (x, y) not in board.posible_movements(self.tokens.color):
             print("Movimiento invalido. Intente de nuevo.")
             position = input("Ingrese la coordenada (x,y): ")
-            x, y = int(position[0]), int(position[1])
+            
+            if re.match(r'^\d{2}$', str(position)):
+                x, y = divmod(int(position), 10)
+            else:
+                x, y = -1, -1
+    
         return x, y
         
     
