@@ -66,9 +66,9 @@ class ReversiBoard(Board):
             child = ReversiBoard(new_state, self.depth + 1)
             child.insert_play(x, y, Token(player_color))
             children.append(child)
-            # print(child)
             
         return children
+    
     def evaluate(self):
         pass
     
@@ -79,6 +79,10 @@ class ReversiBoard(Board):
     @property
     def depth(self):
         return self._depth
+    
+    @depth.setter
+    def depth(self, plus:int):
+        self._depth += plus
     
     def posible_movements(self, color):
         movements = []
@@ -131,9 +135,7 @@ class ReversiBoard(Board):
                 else:
                     opponents_found.append((nx, ny))
                     ny += dy
-                    nx += dx
-            
-            
+                    nx += dx     
                 
     def __str__(self):
         
