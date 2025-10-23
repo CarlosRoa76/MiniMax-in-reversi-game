@@ -39,6 +39,17 @@ class ReversiGame:
                 self.swap_turn()
                 continue
             
+            """
+            CAMBIO ANADIDO PARA COMPROBAR SI HAY MOVIMIENTOS POSIBLES
+            SI NO HAY, SE SALTA EL TURNO AL OTRO JUGADOR
+            DEYBBY
+            """
+            available_moves = self.board.posible_movements(self.current_turn.token_color)
+            if not available_moves:
+                print(f"{self.current_turn.name} no tiene movimientos. Cede el turno.")
+                self.swap_turn()
+                continue
+            
             if not isinstance(self.current_turn, humanPlayer.HumanPlayer):
                 time.sleep(1)
                 
