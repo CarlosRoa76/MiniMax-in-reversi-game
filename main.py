@@ -3,14 +3,15 @@ from game.reversiGame import ReversiGame
 from game.tokens import StackToken
 from players.humanPlayer import HumanPlayer
 from players.randomPlayer import RandomPlayer
-
+from players.minimax import MinimaxPlayer
 
 if __name__ == "__main__":
     board = ReversiBoard()
     game = ReversiGame()
     
     player1 = HumanPlayer("Deybby")
-    player2 = RandomPlayer("Bot")
+    #player2 = RandomPlayer("Bot")
+    player2 = MinimaxPlayer("Bot-Minimax", depth=4)
     
     player1.tokens = StackToken('B')
     player2.tokens = StackToken('W')
