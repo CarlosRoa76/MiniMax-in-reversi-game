@@ -42,6 +42,13 @@ class ReversiBoard(Board):
     def __init__(self, state=None, depth=0, utility=0):
         super().__init__(state, depth, utility)
         self.players_tokens = {"B": 30, "W": 30}
+        self.HEURISTICS = {
+            "corner": self._corner_occupancy,
+            "mob": self._mobility,
+            "stable": self._stable_discs,
+            "parity": self._coin_parity,
+            "pos": self._positional_weights,
+        }
 
         if not state:
             self.create_board()
@@ -153,7 +160,7 @@ class ReversiBoard(Board):
         if (x, y) not in self.posible_movements(token.color):
             raise ValueError(f"Invalid move at ({x}, {y}) for color {token.color}.")
         self._state[y][x] = token
-        self.players_tokens[token] -= 1
+        self.players_tokens[token.color] -= 1
 
         directions = [
             (-1, -1),
@@ -203,42 +210,54 @@ class ReversiBoard(Board):
         return f"ReversiBoard(state={self._state}, depth={self.depth})"
 
     # --- OTRA PARTE DEL CÓDIGO DEL HECTOR MAGICO ---
+    
+    def _normalize(self, W: dict) -> dict:
+        total = sum(abs(v) for v in W.values())
+        if total == 0:
+            return {k: 0.0 for k in W}
+        return {k: (v / total) for k, v in W.items()}
 
-    def evaluate(self, color: str) -> float:
+    def evaluate(
+        self,
+        color: str,
+        enabled_heuristics: list[str] | set[str] | None = None,
+        custom_weights: dict[str, float] | None = None,
+    ) -> float:
         """
-        Función de evaluación principal (antes 'combined_heuristic').
-        Calcula la puntuación del tablero para el color dado.
+        Calcula la evaluación usando solo las heurísticas seleccionadas.
+        - enabled_heuristics: nombres en {"corner","mob","stable","parity","pos"}.
+        Si es None, usa todas.
+        - custom_weights: pesos por nombre (se normalizan y prevalecen sobre los de fase).
         """
-        # Si el juego ha terminado, devuelve la puntuación final (victoria/derrota)
 
         if self.is_terminal():
             pts = self.points()
-            myc = pts[color]
-            opc = pts[opponent(color)]
-            if myc > opc:
-                return math.inf  # Victoria
-            elif opc > myc:
-                return -math.inf  # Derrota
-            else:
-                return 0.0  # Empate
+            myc, opc = pts[color], pts[opponent(color)]
+            if myc > opc:  return math.inf
+            if opc > myc:  return -math.inf
+            return 0.0
 
-        e = self._empty_count()
-        W = self._phase_weights(e)
+        # Determina heurísticas activas
+        if enabled_heuristics is None:
+            enabled = set(self.HEURISTICS.keys())
+        else:
+            enabled = {h for h in enabled_heuristics if h in self.HEURISTICS}
+            if not enabled:
+                return 0.0
 
-        h_corner = self._corner_occupancy(color)
-        h_mob = self._mobility(color)
-        h_stab = self._stable_discs(color)
-        h_parity = self._coin_parity(color)
-        h_pos = self._positional_weights(color)
+        # Calcula valores h_* solo para las activas
+        h_vals = {name: self.HEURISTICS[name](color) for name in enabled}
 
-        value = (
-            W["corner"] * h_corner
-            + W["mob"] * h_mob
-            + W["stable"] * h_stab
-            + W["parity"] * h_parity
-            + W["pos"] * h_pos
-        )
-        return value
+        # Peso: custom > fase
+        if custom_weights is not None and any(k in enabled for k in custom_weights):
+            W = {k: v for k, v in custom_weights.items() if k in enabled}
+            W = self._normalize(W)
+        else:
+            e = self._empty_count()
+            W = self._phase_weights(e, enabled)
+
+        return sum(W[name] * h_vals[name] for name in enabled)
+
 
     def _empty_count(self) -> int:
         return sum(
@@ -337,35 +356,20 @@ class ReversiBoard(Board):
         if max_abs == 0:
             return 0.0  # Evitar división por cero
         return 100.0 * score / max_abs
+        
+    def _phase_weights(self, empty_cells: int, enabled: set[str]) -> dict:
+        if empty_cells >= 40:  # Apertura
+            base = {"corner": 0.20, "mob": 0.35, "stable": 0.10, "parity": 0.05, "pos": 0.30}
 
-    def _phase_weights(self, empty_cells: int):
-        if empty_cells >= 40:
-            # Apertura
-            return {
-                "corner": 0.20,
-                "mob": 0.35,
-                "stable": 0.10,
-                "parity": 0.05,
-                "pos": 0.30,
-            }
-        elif empty_cells >= 15:
-            # Medio juego
-            return {
-                "corner": 0.25,
-                "mob": 0.30,
-                "stable": 0.25,
-                "parity": 0.05,
-                "pos": 0.15,
-            }
-        else:
-            # Final
-            return {
-                "corner": 0.15,
-                "mob": 0.05,
-                "stable": 0.40,
-                "parity": 0.30,
-                "pos": 0.10,
-            }
+        elif empty_cells >= 15:  # Medio juego
+            base = {"corner": 0.25, "mob": 0.30, "stable": 0.25, "parity": 0.05, "pos": 0.15}
+
+        else:  # Final
+            base = {"corner": 0.15, "mob": 0.05, "stable": 0.40, "parity": 0.30, "pos": 0.10}
+            
+        # Filtra a solo las activas y normaliza
+        filtered = {k: v for k, v in base.items() if k in enabled}
+        return self._normalize(filtered)
 
 
 if __name__ == "__main__":
