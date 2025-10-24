@@ -11,8 +11,7 @@ if __name__ == "__main__":
     
     player1 = HumanPlayer("Deybby")
     #player2 = RandomPlayer("Bot")
-    player2 = MinimaxPlayer("Bot-Minimax", depth=4, enabled_heuristics=["mob", "pos", "parity"],
-                            custom_weights={"pos": 0.6, "mob": 0.3, "parity": 0.1})
+    player2 = MinimaxPlayer("Bot-Minimax", max_time=1)
     
     player1.tokens = StackToken('B')
     player2.tokens = StackToken('W')

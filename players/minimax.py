@@ -1,6 +1,7 @@
 import math
 from copy import deepcopy
 from typing import List, Tuple, Optional
+import time
 
 from players.player import Player
 from game.reversiBoard import ReversiBoard, opponent  # <-- Importamos ReversiBoard Y la función opponent
@@ -11,7 +12,7 @@ class MinimaxPlayer(Player):
     
     TYPE_ = "minimax"
     
-    def __init__(self, name, depth=4, 
+    def __init__(self, name, depth=math.inf, max_time=math.inf, 
                 enabled_heuristics: Optional[List[str]] = None,
                 custom_weights: Optional[dict] = None):
         
@@ -19,7 +20,9 @@ class MinimaxPlayer(Player):
         self.max_depth = depth  
         self.enabled_heuristics = set(enabled_heuristics) if enabled_heuristics else None
         self.custom_weights = custom_weights
-
+        self.max_time = max_time
+        
+        
     def play(self, board: ReversiBoard) -> Tuple[int, int]:
         """
         Punto de entrada principal. Encuentra el mejor movimiento
@@ -27,6 +30,8 @@ class MinimaxPlayer(Player):
         """
         print(f"{self.name}")
         possible_moves = board.posible_movements(self.tokens.color)
+        self.time_start = time.time()
+        
         
         if not possible_moves:
             return None
@@ -60,9 +65,8 @@ class MinimaxPlayer(Player):
         """
         Función recursiva de Minimax con poda Alfa-Beta.
         """
-    
-
-        if depth == 0 or board.is_terminal():
+        
+        if depth == 0 or board.is_terminal() or time.time() - self.time_start >= self.max_time:
             return board.evaluate(self.tokens.color, enabled_heuristics=self.enabled_heuristics,
                                 custom_weights=self.custom_weights)
         
