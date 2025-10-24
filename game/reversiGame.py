@@ -1,5 +1,7 @@
 from game.reversiBoard import ReversiBoard
 from players import humanPlayer, randomPlayer
+import os
+from game.color import Color
 import time
 
 
@@ -31,8 +33,9 @@ class ReversiGame:
         self.board = board
         # self.board = ReversiBoard()
         self.current_turn = self.player1
-
+        os.system("cls")
         while not self.board.is_terminal():
+
             available_moves = self.board.posible_movements(
                 self.current_turn.token_color
             )
@@ -40,40 +43,45 @@ class ReversiGame:
                 f"Turno de {self.current_turn.name} ({self.current_turn.token_color}) Profundidad: {self.board.depth}"
             )
             print(
-                "Puntajes:\n",
-                "(W) Blancas:",
-                self.board.points()["W"],
-                "- (B) Negras:",
-                self.board.points()["B"],
+                f"Puntajes:\n{Color.RED}Rojas{Color.RESET}: {self.board.points()['R']} - {Color.BLUE}Azules{Color.RESET}: {self.board.points()['B']}"
             )
-            print(self.board)
 
             if self.current_turn.tokens.is_empty():
                 print(f"{self.current_turn.name} no tiene fichas para jugar.")
                 self.swap_turn()
+                time.sleep(1)
                 continue
             elif not available_moves:
                 print(f"{self.current_turn.name} no tiene movimientos. Cede el turno.")
                 self.swap_turn()
+                time.sleep(1)
                 continue
 
-            if not isinstance(self.current_turn, humanPlayer.HumanPlayer):
-                time.sleep(1)
+            print(self.board.show(self.current_turn))
+
+            # if not isinstance(self.current_turn, humanPlayer.HumanPlayer):
+            #     time.sleep(1)
 
             x, y = self.current_turn.play(self.board)
             self.board.insert_play(x, y, self.current_turn.tokens.pop())
+            os.system("cls")
             print(f"\n{self.current_turn.name} juega en ({x}, {y})")
             self.swap_turn()
 
         print(
             "Puntajes:\n",
-            "Blancas:",
-            self.board.points()["W"],
-            "- Negras:",
+            "Rojas:",
+            self.board.points()["R"],
+            "- Azules:",
             self.board.points()["B"],
         )
         print(self.board)
-        print("Game over!")
+        if self.board.points()["B"] > self.board.points()["R"]:
+            print("Ganador: Azul")
+        elif self.board.points()["R"] > self.board.points()["B"]:
+            print("Ganador: Rojo")
+        else:
+            print("Juego empate")
 
 
 if __name__ == "__main__":

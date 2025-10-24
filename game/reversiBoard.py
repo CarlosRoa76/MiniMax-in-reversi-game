@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from game.tokens import Token
 from copy import deepcopy
 import math
+from game.color import Color
 
 # --- IMPLEMENTACION DE LO QUE HIZO HECTOR EL MORENO MAGICO ---
 
@@ -19,7 +20,7 @@ POSITION_WEIGHTS = [
 
 def opponent(color: str) -> str:
     """Devuelve el color opuesto."""
-    return "W" if color == "B" else "B"
+    return "R" if color == "B" else "B"
 
 
 class Board(ABC):
@@ -41,7 +42,7 @@ class ReversiBoard(Board):
 
     def __init__(self, state=None, depth=0, utility=0):
         super().__init__(state, depth, utility)
-        self.players_tokens = {"B": 30, "W": 30}
+        self.players_tokens = {"B": 30, "R": 30}
         self.HEURISTICS = {
             "corner": self._corner_occupancy,
             "mob": self._mobility,
@@ -58,34 +59,34 @@ class ReversiBoard(Board):
             [None for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)
         ]
         self._state[3][3] = Token("B")
-        self._state[3][4] = Token("W")
-        self._state[4][3] = Token("W")
+        self._state[3][4] = Token("R")
+        self._state[4][3] = Token("R")
         self._state[4][4] = Token("B")
 
     def points(self):
-        black_points = 0
-        white_points = 0
+        blue_points = 0
+        red_points = 0
         for row in self._state:
             for token in row:
                 if token is None:
                     continue
 
                 if token.color == "B":
-                    black_points += 1
-                elif token.color == "W":
-                    white_points += 1
+                    blue_points += 1
+                elif token.color == "R":
+                    red_points += 1
 
-        return {"B": black_points, "W": white_points}
+        return {"B": blue_points, "R": red_points}
 
     def is_terminal(self):
         # The game ends when neither player can make a valid move
-        if not self.posible_movements("B") and not self.posible_movements("W"):
+        if not self.posible_movements("B") and not self.posible_movements("R"):
             return True
 
         # Or when one player has no tokens and the other has no valid moves
         if (
-            (self.players_tokens["B"] == 0 and not self.posible_movements("W"))
-            or self.players_tokens["W"] == 0
+            (self.players_tokens["B"] == 0 and not self.posible_movements("R"))
+            or self.players_tokens["R"] == 0
             and not self.posible_movements("B")
         ):
             return True
@@ -191,6 +192,27 @@ class ReversiBoard(Board):
                     ny += dy
                     nx += dx
 
+    def show(self, player=None):
+        avaible_cells = self.posible_movements(player.token_color)
+
+        board_str = f"    " + "   ".join(str(i) for i in range(self.BOARD_SIZE)) + "\n"
+        board_str += f"  {'-'* (self.BOARD_SIZE* 4)}-\n"
+        for y in range(self.BOARD_SIZE):
+            board_str += f"{y} "
+            for x in range(self.BOARD_SIZE):
+                if (x, y) in avaible_cells:
+                    board_str += f"|{Color.BACKGROUND_GRAY}   {Color.RESET}"
+                elif self._state[y][x] == None:
+                    board_str += f"|   "
+                elif self._state[y][x].color == "B":
+                    board_str += f"| {Color.BLUE}O{Color.RESET} "
+                else:
+                    board_str += f"| {Color.RED}O{Color.RESET} "
+            board_str += f"|\n"
+            board_str += f"  {'-'* (self.BOARD_SIZE* 4)}-\n"
+
+        return board_str
+
     def __str__(self):
 
         board_str = f"  {'-'* (self.BOARD_SIZE* 4)}-\n"
@@ -210,7 +232,7 @@ class ReversiBoard(Board):
         return f"ReversiBoard(state={self._state}, depth={self.depth})"
 
     # --- OTRA PARTE DEL CÓDIGO DEL HECTOR MAGICO ---
-    
+
     def _normalize(self, W: dict) -> dict:
         total = sum(abs(v) for v in W.values())
         if total == 0:
@@ -233,8 +255,10 @@ class ReversiBoard(Board):
         if self.is_terminal():
             pts = self.points()
             myc, opc = pts[color], pts[opponent(color)]
-            if myc > opc:  return math.inf
-            if opc > myc:  return -math.inf
+            if myc > opc:
+                return math.inf
+            if opc > myc:
+                return -math.inf
             return 0.0
 
         # Determina heurísticas activas
@@ -257,7 +281,6 @@ class ReversiBoard(Board):
             W = self._phase_weights(e, enabled)
 
         return sum(W[name] * h_vals[name] for name in enabled)
-
 
     def _empty_count(self) -> int:
         return sum(
@@ -356,17 +379,35 @@ class ReversiBoard(Board):
         if max_abs == 0:
             return 0.0  # Evitar división por cero
         return 100.0 * score / max_abs
-        
+
     def _phase_weights(self, empty_cells: int, enabled: set[str]) -> dict:
         if empty_cells >= 40:  # Apertura
-            base = {"corner": 0.20, "mob": 0.35, "stable": 0.10, "parity": 0.05, "pos": 0.30}
+            base = {
+                "corner": 0.20,
+                "mob": 0.35,
+                "stable": 0.10,
+                "parity": 0.05,
+                "pos": 0.30,
+            }
 
         elif empty_cells >= 15:  # Medio juego
-            base = {"corner": 0.25, "mob": 0.30, "stable": 0.25, "parity": 0.05, "pos": 0.15}
+            base = {
+                "corner": 0.25,
+                "mob": 0.30,
+                "stable": 0.25,
+                "parity": 0.05,
+                "pos": 0.15,
+            }
 
         else:  # Final
-            base = {"corner": 0.15, "mob": 0.05, "stable": 0.40, "parity": 0.30, "pos": 0.10}
-            
+            base = {
+                "corner": 0.15,
+                "mob": 0.05,
+                "stable": 0.40,
+                "parity": 0.30,
+                "pos": 0.10,
+            }
+
         # Filtra a solo las activas y normaliza
         filtered = {k: v for k, v in base.items() if k in enabled}
         return self._normalize(filtered)
@@ -377,4 +418,4 @@ if __name__ == "__main__":
     print(board)
     print("Movimientos posibles para 'B':", board.posible_movements("B"))
     print("Evaluación para 'B':", board.evaluate("B"))
-    print("Evaluación para 'W':", board.evaluate("W"))
+    print("Evaluación para 'R':", board.evaluate("R"))

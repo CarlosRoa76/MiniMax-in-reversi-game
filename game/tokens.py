@@ -1,15 +1,15 @@
 class Token:
 
-    COLORS = ("B", "W")
+    COLORS = ("B", "R")
 
     def __init__(self, color):
         if color not in self.COLORS:
-            raise ValueError(f"Invalid color {color}. Valid colors are B and W.")
+            raise ValueError(f"Invalid color {color}. Valid colors are B and R.")
 
         self.color = color
 
     def flip(self):
-        self.color = "W" if self.color == "B" else "B"
+        self.color = "R" if self.color == "B" else "B"
 
     def __str__(self):
         return self.color
@@ -47,10 +47,10 @@ if __name__ == "__main__":
     print(t.color)  # Output: B
 
     t.flip()
-    print(t.color)  # Output: W
+    print(t.color)  # Output: R
 
     t.flip()
     print(t.color)  # Output: B
 
     t.flip()
-    print(t.color)  # Output: W
+    print(t.color)  # Output: R
