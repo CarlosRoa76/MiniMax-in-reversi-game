@@ -11,10 +11,15 @@ class MinimaxPlayer(Player):
     
     TYPE_ = "minimax"
     
-    def __init__(self, name, depth=4):
+    def __init__(self, name, depth=4, 
+                enabled_heuristics: Optional[List[str]] = None,
+                custom_weights: Optional[dict] = None):
+        
         super().__init__(name)
         self.max_depth = depth  
-             
+        self.enabled_heuristics = set(enabled_heuristics) if enabled_heuristics else None
+        self.custom_weights = custom_weights
+
     def play(self, board: ReversiBoard) -> Tuple[int, int]:
         """
         Punto de entrada principal. Encuentra el mejor movimiento
@@ -58,7 +63,8 @@ class MinimaxPlayer(Player):
     
 
         if depth == 0 or board.is_terminal():
-            return board.evaluate(self.tokens.color)
+            return board.evaluate(self.tokens.color, enabled_heuristics=self.enabled_heuristics,
+                                custom_weights=self.custom_weights)
         
         if is_maximizing_player:
             max_eval = -math.inf
