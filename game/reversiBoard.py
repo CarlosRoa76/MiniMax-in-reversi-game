@@ -193,7 +193,7 @@ class ReversiBoard(Board):
                     nx += dx
 
     def show(self, player=None):
-        avaible_cells = self.posible_movements(player.token_color)
+        avaible_cells = self.posible_movements(player.token_color) if player else []
 
         board_str = f"    " + "   ".join(str(i) for i in range(self.BOARD_SIZE)) + "\n"
         board_str += f"  {'-'* (self.BOARD_SIZE* 4)}-\n"

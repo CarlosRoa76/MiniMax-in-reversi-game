@@ -5,7 +5,7 @@ class RandomPlayer(Player):
     
     TYPE_ = "random"
     
-    def __init__(self, name):
+    def __init__(self, name="random"):
         super().__init__(name)
              
     def play(self, board):

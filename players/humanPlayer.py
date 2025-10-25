@@ -5,7 +5,7 @@ class HumanPlayer(Player):
     
     TYPE_ = "human"
     
-    def __init__(self, name):
+    def __init__(self, name="human"):
         super().__init__(name)
              
     def play(self, board):
