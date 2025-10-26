@@ -78,7 +78,7 @@ class ReversiGame:
 
         self.current_turn = (
             self.player1
-            if self.current_turn.name == self.player2.name
+            if self.current_turn.tokens == self.player2.tokens
             else self.player2
         )
         self.board.depth += 1
@@ -146,20 +146,12 @@ class ReversiGame:
 
     def play_for_algorithms(self, board: ReversiBoard):
         self.board = board
-        # self.board = ReversiBoard()
         self.current_turn = self.player1
-        # os.system("cls")
         while not self.board.is_terminal():
 
             available_moves = self.board.posible_movements(
                 self.current_turn.token_color
             )
-            # print(
-            #     f"Turno de {self.current_turn.name} ({self.current_turn.token_color}) Profundidad: {self.board.depth}"
-            # )
-            # print(
-            #     f"Puntajes:\n{Color.RED}Rojas{Color.RESET}: {self.board.points()['R']} - {Color.BLUE}Azules{Color.RESET}: {self.board.points()['B']}"
-            # )
 
             if self.current_turn.tokens.is_empty() or not available_moves:
                 self.swap_turn()
@@ -170,14 +162,19 @@ class ReversiGame:
             self.swap_turn()
         winner = None
         if self.board.points()["B"] > self.board.points()["R"]:
-            return()
+            print("Ganador: Azul")
+            winner = self.player1.name  if self.player1.token_color == "B" else self.player2.name
         elif self.board.points()["R"] > self.board.points()["B"]:
             print("Ganador: Rojo")
-        else:
-            print("Juego empate")
+            winner = self.player1 if self.player1.token_color == "R" else self.player2
             
         for player, opponent in ((self.player1, self.player2),(self.player2, self.player1)):
-            Metrics.generate_report(player, opponent.name, )
+            try:
+                Metrics.generate_vs_report(player, opponent.name, winner.name, self.board.points()[winner.token_color], self.board.points()["R"]+self.board.points()["B"], self.board.depth)
+            except:
+                pass
+            
+        return winner, self.board
             
         
 
